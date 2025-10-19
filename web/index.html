@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聊天服务器管理面板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .section h2 {
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .online {
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .offline {
+            color: #6c757d;
+        }
+        
+        .message-private {
+            background-color: #e3f2fd;
+        }
+        
+        .message-broadcast {
+            background-color: #f3e5f5;
+        }
+        
+        .refresh-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+        
+        .refresh-btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-online {
+            background-color: #28a745;
+        }
+        
+        .status-offline {
+            background-color: #6c757d;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .error {
+            color: #dc3545;
+            padding: 10px;
+            background-color: #f8d7da;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>聊天服务器管理面板</h1>
+            <p>实时监控和管理聊天服务器</p>
+        </header>
+        
+        <div class="stats-grid" id="statsGrid">
+            <div class="loading">加载中...</div>
+        </div>
+        
+        <div class="section">
+            <h2>用户管理</h2>
+            <button class="refresh-btn" onclick="loadUsers()">刷新用户列表</button>
+            <div id="usersTable">
+                <div class="loading">加载用户数据...</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>最近消息</h2>
+            <button class="refresh-btn" onclick="loadMessages()">刷新消息</button>
+            <div id="messagesTable">
+                <div class="loading">加载消息数据...</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>系统信息</h2>
+            <button class="refresh-btn" onclick="loadSystemInfo()">刷新系统信息</button>
+            <div id="systemInfo">
+                <div class="loading">加载系统信息...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API基础URL
+        const API_BASE = '/api';
+        
+        // 加载统计数据
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.data;
+                    document.getElementById('statsGrid').innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.total_users}</div>
+                            <div class="stat-label">总用户数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.online_users}</div>
+                            <div class="stat-label">在线用户</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.total_messages}</div>
+                            <div class="stat-label">总消息数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number">${stats.database_size}</div>
+                            <div class="stat-label">数据库大小</div>
+                        </div>
+                    `;
+                } else {
+                    showError('statsGrid', '加载统计数据失败: ' + data.message);
+                }
+            } catch (error) {
+                showError('statsGrid', '加载统计数据失败: ' + error.message);
+            }
+        }
+        
+        // 加载用户列表
+        async function loadUsers() {
+            try {
+                const response = await fetch(`${API_BASE}/users`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const users = data.data;
+                    let html = '';
+                    
+                    if (users.length > 0) {
+                        html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>用户名</th>
+                                        <th>状态</th>
+                                        <th>注册时间</th>
+                                        <th>最后登录</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        users.forEach(user => {
+                            html += `
+                                <tr>
+                                    <td>${user.id}</td>
+                                    <td>${escapeHtml(user.username)}</td>
+                                    <td>
+                                        <span class="status-indicator ${user.is_online ? 'status-online' : 'status-offline'}"></span>
+                                        ${user.is_online ? '在线' : '离线'}
+                                    </td>
+                                    <td>${escapeHtml(user.created_at)}</td>
+                                    <td>${escapeHtml(user.last_login || '从未登录')}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                    } else {
+                        html = '<p>暂无用户数据</p>';
+                    }
+                    
+                    document.getElementById('usersTable').innerHTML = html;
+                } else {
+                    showError('usersTable', '加载用户数据失败: ' + data.message);
+                }
+            } catch (error) {
+                showError('usersTable', '加载用户数据失败: ' + error.message);
+            }
+        }
+        
+        // 加载消息列表
+        async function loadMessages() {
+            try {
+                const response = await fetch(`${API_BASE}/messages?limit=20`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const messages = data.data;
+                    let html = '';
+                    
+                    if (messages.length > 0) {
+                        html = `
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>时间</th>
+                                        <th>发送者</th>
+                                        <th>接收者</th>
+                                        <th>内容</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+                        
+                        messages.forEach(msg => {
+                            const messageClass = msg.to_user_id === null ? 'message-broadcast' : 'message-private';
+                            html += `
+                                <tr class="${messageClass}">
+                                    <td>${escapeHtml(msg.created_at)}</td>
+                                    <td>${escapeHtml(msg.from_username)}</td>
+                                    <td>${escapeHtml(msg.to_username || '所有人')}</td>
+                                    <td>${escapeHtml(msg.content)}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</tbody></table>';
+                    } else {
+                        html = '<p>暂无消息数据</p>';
+                    }
+                    
+                    document.getElementById('messagesTable').innerHTML = html;
+                } else {
+                    showError('messagesTable', '加载消息数据失败: ' + data.message);
+                }
+            } catch (error) {
+                showError('messagesTable', '加载消息数据失败: ' + error.message);
+            }
+        }
+        
+        // 加载系统信息
+        async function loadSystemInfo() {
+            try {
+                const response = await fetch(`${API_BASE}/system`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const systemInfo = data.data;
+                    document.getElementById('systemInfo').innerHTML = `
+                        <table>
+                            <tr>
+                                <td><strong>服务器时间</strong></td>
+                                <td>${escapeHtml(systemInfo.server_time)}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>服务器版本</strong></td>
+                                <td>${escapeHtml(systemInfo.version)}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>服务器状态</strong></td>
+                                <td><span class="online">${escapeHtml(systemInfo.status)}</span></td>
+                            </tr>
+                        </table>
+                    `;
+                } else {
+                    showError('systemInfo', '加载系统信息失败: ' + data.message);
+                }
+            } catch (error) {
+                showError('systemInfo', '加载系统信息失败: ' + error.message);
+            }
+        }
+        
+        // 显示错误信息
+        function showError(elementId, message) {
+            document.getElementById(elementId).innerHTML = `
+                <div class="error">${escapeHtml(message)}</div>
+            `;
+        }
+        
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadUsers();
+            loadMessages();
+            loadSystemInfo();
+            
+            // 每30秒自动刷新统计数据
+            setInterval(loadStats, 30000);
+        });
+    </script>
+</body>
+</html>
