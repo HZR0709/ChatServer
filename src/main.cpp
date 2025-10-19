@@ -3,6 +3,7 @@
 #include "core/server.hpp"
 
 int main(int argc, char* argv[]) {
+    // 加载配置文件
     std::string config_file = "server.conf";
     
     // 简单的命令行参数解析

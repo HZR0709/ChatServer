@@ -27,9 +27,9 @@ clean:
 	rm -f $(OBJECTS) $(TARGET)
 
 install:
-	mkdir -p ../bin
+	mkdir -p build/bin
 	cp $(TARGET) ../bin/
-	mkdir -p ../web
-	cp ../web/*.html ../web/
+	mkdir -p build/bin/web
+	cp web/*.html build/bin/web
 
 .PHONY: clean install
