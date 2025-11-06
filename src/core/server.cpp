@@ -10,11 +10,10 @@
 // 全局服务器实例（用于信号处理）
 static ChatServer* g_server_instance = nullptr;
 
-ChatServer::ChatServer() 
+ChatServer::ChatServer(std::shared_ptr<ConfigManager> config_manager) 
     : running_(false)
-    , db_(DatabaseManager::get_instance())
     , logger_(Logger::get_instance())
-    , config_manager_(ConfigManager::get_instance()) {
+    , config_manager_(std::move(config_manager))  {
     
     // 设置全局实例用于信号处理
     g_server_instance = this;
@@ -30,9 +29,26 @@ bool ChatServer::initialize(const std::string& config_file) {
         return true;
     }
     
-    // 加载配置
-    if (!load_config(config_file)) {
-        std::cerr << "配置加载失败" << std::endl;
+    if (!config_manager_) {
+        config_manager_ = ConfigManager::create_from_ini(config_file);
+        if (!config_manager_) {
+            // 如果INI文件加载失败，尝试使用环境变量
+            config_manager_ = ConfigManager::create_from_env("CHAT_SERVER_");
+        }
+        if (!config_manager_) {
+            // 如果环境变量也失败，使用内存默认配置
+            std::unordered_map<std::string, std::string> default_config = {
+                {"port", "8888"},
+                {"thread_pool_size", "4"},
+                {"database_path", "chat_server.db"}
+                // 其他默认配置...
+            };
+            config_manager_ = ConfigManager::create_from_memory(default_config);
+        }
+    }
+    
+    if (!config_manager_) {
+        std::cerr << "所有配置源都加载失败" << std::endl;
         return false;
     }
     
@@ -50,6 +66,7 @@ bool ChatServer::initialize(const std::string& config_file) {
     if (!initialize_database() ||
         !initialize_managers() ||
         !initialize_network() ||
+        !initialize_monitor() ||
         !initialize_web_interface()) {
         logger_.critical("服务器初始化失败");
         return false;
@@ -59,38 +76,83 @@ bool ChatServer::initialize(const std::string& config_file) {
                  ", 线程数: " + std::to_string(config_.thread_pool_size) +
                  ", 数据库: " + config_.database_path);
     
+    monitor_->log_start();
     running_ = true;
     return true;
 }
 
-bool ChatServer::load_config(const std::string& config_file) {
-    if (!config_manager_.load_config(config_file)) {
-        std::cout << "使用默认配置..." << std::endl;
+bool ChatServer::load_config() {
+    // 从配置管理器加载服务器配置
+    config_ = ServerConfig::load_from(config_manager_);
+    
+    logger_.info("服务器配置加载: " + config_.to_string());
+    return true;
+}
+
+bool ChatServer::load_configuration(const std::string& config_file) {
+    ServerConfig default_config;
+    
+    // 第一优先级: 配置文件
+    config_manager_ = ConfigManager::create_from_ini(config_file);
+    if (config_manager_) {
+        ServerConfig loaded_config = ServerConfig::load_from(config_manager_);
+        if (loaded_config.validate()) {
+            config_ = loaded_config;
+            return true;
+        }
+        logger_.warning("配置文件验证失败: " + config_file);
     }
     
-    config_.port = config_manager_.get_int("port", 8888);
-    config_.thread_pool_size = config_manager_.get_int("thread_pool_size", 4);
-    config_.connection_timeout = config_manager_.get_int("connection_timeout", 300);
-    config_.heartbeat_interval = config_manager_.get_int("heartbeat_interval", 60);
-    config_.max_message_history = config_manager_.get_int("max_message_history", 1000);
-    config_.log_file = config_manager_.get_string("log_file", "chat_server.log");
-    config_.console_log = config_manager_.get_bool("console_log", true);
-    config_.database_path = config_manager_.get_string("database_path", "chat_server.db");
-    config_.web_port = config_manager_.get_int("web_port", 8080);
-    config_.enable_web_interface = config_manager_.get_bool("enable_web_interface", true);
+    // 第二优先级: 环境变量
+    config_manager_ = ConfigManager::create_from_env("CHAT_SERVER_");
+    if (config_manager_) {
+        ServerConfig env_config = ServerConfig::load_from(config_manager_);
+        if (env_config.validate()) {
+            config_ = env_config;
+            logger_.info("使用环境变量配置");
+            return true;
+        }
+    }
+    
+    // 最终回退: 默认配置
+    auto default_map = ServerConfig::to_config_map(default_config);
+    config_manager_ = ConfigManager::create_from_memory(default_map);
+    if (!config_manager_) {
+        return false;
+    }
+    
+    config_ = default_config;
+    logger_.info("使用默认配置");
     
     return true;
 }
 
 bool ChatServer::initialize_database() {
-    if (!db_.initialize(config_.database_path)) {
-        logger_.critical("数据库初始化失败");
+    try {
+        // 使用工厂模式创建数据库
+        database_ = DatabaseFactory::createSQLiteDatabase();
+        
+        if (!database_->initialize(config_.database_path)) {
+            logger_.critical("数据库初始化失败");
+            return false;
+        }
+        
+        // 使用依赖注入创建仓储
+        user_repository_ = std::make_shared<UserRepository>(database_);
+        message_repository_ = std::make_shared<MessageRepository>(database_);
+        session_repository_ = std::make_shared<SessionRepository>(database_);
+        admin_repository_ = std::make_shared<AdminRepository>(database_);
+        
+        // 清理之前的会话（服务器重启后）
+        session_repository_->delete_all_sessions();
+        
+        logger_.info("数据库和仓储初始化成功");
+        return true;
+        
+    } catch (const std::exception& e) {
+        logger_.critical("数据库初始化异常: " + std::string(e.what()));
         return false;
     }
-    
-    // 清理之前的会话（服务器重启后）
-    db_.delete_all_sessions();
-    return true;
 }
 
 bool ChatServer::initialize_managers() {
@@ -115,9 +177,30 @@ bool ChatServer::initialize_web_interface() {
     if (!config_.enable_web_interface) {
         return true;
     }
+    // 加载安全配置
+    SecurityConfig security_config = SecurityConfig::load_default();
+    
+    // 创建TokenManager
+    TokenConfig token_config = TokenConfig::from_security_config(security_config);
+    token_manager_ = std::make_shared<TokenManager>(token_config);
+
+    admin_service_ = std::make_shared<AdminService>(admin_repository_, token_manager_);
+    message_service_ = std::make_shared<MessageService>(message_repository_);
+    system_service_ = std::make_shared<SystemService>(monitor_, user_repository_);
+    user_service_ = std::make_shared<UserService>(user_repository_);
+    command_factory_ = std::make_shared<CommandFactory>();
     
     web_server_ = std::make_unique<WebServer>();
-    WebAPI::register_routes(*web_server_);
+    webapi_ = std::make_shared<WebAPI>(
+        admin_service_, message_service_, system_service_, 
+        user_service_, token_manager_, command_factory_
+    );
+    // 设置Web根目录
+    web_server_->set_web_root("./web");
+    
+    // 使用依赖注入注册 WebAPI 路由
+    WebAPI::register_routes(*web_server_, 
+                            webapi_);
     
     if (!web_server_->start(config_.web_port)) {
         logger_.warning("Web服务器启动失败");
@@ -125,16 +208,12 @@ bool ChatServer::initialize_web_interface() {
     }
     
     logger_.info("Web管理界面已启动: http://localhost:" + std::to_string(config_.web_port));
-    
-    // 检查web目录是否存在
-    std::ifstream test_file("./web/index.html");
-    if (!test_file) {
-        logger_.warning("Web目录不存在或index.html文件缺失，Web界面可能无法正常工作");
-    } else {
-        test_file.close();
-    }
-    
     return true;
+}
+
+bool ChatServer::initialize_monitor() {
+    monitor_ = std::make_shared<ServerMonitorImpl>(database_);
+    return monitor_->initialize();
 }
 
 void ChatServer::run() {
@@ -187,7 +266,7 @@ void ChatServer::main_loop() {
                 thread_pool_->enqueue([this, client_fd]() {
                     this->handle_client(client_fd);
                 });
-                
+
                 logger_.debug("接受新客户端连接: FD " + std::to_string(client_fd));
                 
                 // 显示连接状态
@@ -204,10 +283,14 @@ void ChatServer::main_loop() {
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - last_status_time);
         
         if (duration.count() >= 60) {
+            auto total_users = user_repository_->get_total_users_count();
+            auto online_users = user_repository_->get_online_users_count();
+            auto total_messages = message_repository_->get_message_count();
+            
             logger_.info("服务器状态 - 在线用户: " + std::to_string(user_manager_->get_user_count()) +
                         ", 总连接: " + std::to_string(connection_manager_->get_connection_count()) +
-                        ", 数据库用户: " + std::to_string(db_.get_total_users_count()) +
-                        ", 数据库消息: " + std::to_string(db_.get_total_messages_count()));
+                        ", 数据库用户: " + std::to_string(total_users) +
+                        ", 数据库消息: " + std::to_string(total_messages));
             last_status_time = now;
         }
     }
@@ -250,7 +333,9 @@ void ChatServer::shutdown() {
     }
     
     // 关闭数据库
-    db_.shutdown();
+    if (database_) {
+        database_->shutdown();
+    }
     
     logger_.info("服务器已安全关闭");
 }
@@ -274,7 +359,10 @@ void ChatServer::heartbeat_thread() {
             if (user) {
                 logger_.info("因超时移除用户: " + user->username + " (ID: " + std::to_string(user->user_id) + ")");
                 user_manager_->remove_user_by_fd(fd);
-                db_.delete_session(fd);
+                session_repository_->delete_session(fd);
+                
+                // 更新用户在线状态
+                user_repository_->set_user_online_status(user->user_id, false);
             }
             
             network_->close_connection(fd);
@@ -310,12 +398,15 @@ void ChatServer::input_thread_func() {
             running_ = false;
             break;
         } else if (input == "status") {
+            auto total_users = user_repository_->get_total_users_count();
+            auto online_users = user_repository_->get_online_users_count();
+            auto total_messages = message_repository_->get_message_count();
+            
             std::cout << "服务器状态:" << std::endl;
             std::cout << "  在线用户: " << user_manager_->get_user_count() << std::endl;
             std::cout << "  总连接数: " << connection_manager_->get_connection_count() << std::endl;
-            std::cout << "  数据库用户: " << db_.get_total_users_count() << std::endl;
-            std::cout << "  数据库消息: " << db_.get_total_messages_count() << std::endl;
-            std::cout << "  数据库大小: " << db_.get_database_size() << std::endl;
+            std::cout << "  数据库用户: " << total_users << std::endl;
+            std::cout << "  数据库消息: " << total_messages << std::endl;
             std::cout << "  工作线程: " << thread_pool_->get_thread_count() << std::endl;
             std::cout << "  待处理任务: " << thread_pool_->get_task_count() << std::endl;
         } else if (input == "users") {
@@ -350,6 +441,33 @@ void ChatServer::input_thread_func() {
     logger_.info("控制台输入线程退出");
 }
 
+void ChatServer::maintenance_thread() {
+    logger_.info("维护线程启动");
+    // token_manager_ = std::make_unique<TokenManager>();
+    
+    while (running_) {
+        std::this_thread::sleep_for(std::chrono::hours(1)); // 每小时执行一次
+        
+        if (!running_) break;
+        
+        try {
+            // 清理过期令牌
+            if (token_manager_) {
+                token_manager_->cleanup_expired_tokens();
+                size_t active_tokens = token_manager_->get_active_token_count();
+                logger_.debug("当前活跃令牌数量: " + std::to_string(active_tokens));
+            }
+            
+            // 其他维护任务...
+            logger_.debug("维护任务执行完成");
+        } catch (const std::exception& e) {
+            logger_.error("维护任务执行失败: " + std::string(e.what()));
+        }
+    }
+    
+    logger_.info("维护线程退出");
+}
+
 void ChatServer::handle_client(int client_fd) {
     logger_.debug("开始处理客户端: FD " + std::to_string(client_fd));
     
@@ -368,12 +486,13 @@ void ChatServer::handle_client(int client_fd) {
             if (user) {
                 logger_.info("客户端断开连接: " + user->username + " (ID: " + std::to_string(user->user_id) + ")");
                 user_manager_->remove_user_by_fd(client_fd);
-                db_.delete_session(client_fd);
+                session_repository_->delete_session(client_fd);
+                user_repository_->set_user_online_status(user->user_id, false);
                 
                 // 广播用户下线消息
                 auto online_users = user_manager_->get_online_users();
                 std::string broadcast_msg = "系统: 用户 " + user->username + " 断开了连接";
-                db_.save_message(-1, -1, 2, broadcast_msg);
+                message_repository_->save_message(-1, -1, 2, broadcast_msg);
                 
                 for (const auto& u : online_users) {
                     network_->send_message(u.socket_fd, broadcast_msg);
@@ -391,7 +510,7 @@ void ChatServer::handle_client(int client_fd) {
         
         // 更新活动时间
         connection_manager_->update_activity(client_fd);
-        db_.update_session_activity(client_fd);
+        session_repository_->update_session_activity(client_fd);
         
         // 处理消息
         handle_client_message(client_fd, message);
@@ -416,7 +535,6 @@ void ChatServer::handle_client_message(int client_fd, const std::string& message
     
     const std::string& command = tokens[0];
     
-    // 这里简化处理，实际应该将命令处理也模块化
     if (command == "LOGIN") {
         if (tokens.size() < 2) {
             network_->send_message(client_fd, "错误: 缺少用户名");
@@ -425,13 +543,13 @@ void ChatServer::handle_client_message(int client_fd, const std::string& message
         
         const std::string& username = tokens[1];
         
-        if (!db_.create_user(username)) {
+        if (!user_repository_->create_user(username)) {
             network_->send_message(client_fd, "错误: 用户创建失败");
             return;
         }
         
-        auto user_record = db_.get_user(username);
-        if (user_record.id == -1) {
+        auto user = user_repository_->get_user(username);
+        if (!user.has_value()) {
             network_->send_message(client_fd, "错误: 用户不存在");
             return;
         }
@@ -442,8 +560,9 @@ void ChatServer::handle_client_message(int client_fd, const std::string& message
             return;
         }
         
-        db_.create_session(user_id, client_fd);
-        db_.update_user_last_login(user_id);
+        session_repository_->create_session(user_id, client_fd);
+        user_repository_->update_user_last_login(user_id);
+        user_repository_->set_user_online_status(user_id, true);
         
         network_->send_message(client_fd, "登录成功! 欢迎 " + username + " (ID: " + std::to_string(user_id) + ")");
         
@@ -452,13 +571,90 @@ void ChatServer::handle_client_message(int client_fd, const std::string& message
         // 广播用户上线消息
         auto online_users = user_manager_->get_online_users();
         std::string broadcast_msg = "系统: 用户 " + username + " 加入了聊天室";
-        db_.save_message(-1, -1, 2, broadcast_msg);
+        message_repository_->save_message(-1, -1, 2, broadcast_msg);
         
         for (const auto& user : online_users) {
             if (user.user_id != user_id) {
                 network_->send_message(user.socket_fd, broadcast_msg);
             }
         }
+        
+    } else if (command == "SEND") {
+        UserInfo* sender = user_manager_->find_user_by_fd(client_fd);
+        if (!sender) {
+            network_->send_message(client_fd, "错误: 请先登录");
+            return;
+        }
+        
+        if (tokens.size() < 3) {
+            network_->send_message(client_fd, "错误: 缺少参数");
+            return;
+        }
+        
+        try {
+            int target_user_id = std::stoi(tokens[1]);
+            std::string content = tokens[2];
+            
+            UserInfo* target_user = user_manager_->find_user(target_user_id);
+            if (!target_user) {
+                network_->send_message(client_fd, "错误: 用户不存在或不在线");
+                return;
+            }
+            
+            std::string private_msg = "私聊来自 " + sender->username + " (ID:" + std::to_string(sender->user_id) + "): " + content;
+            
+            // 保存到数据库
+            message_repository_->save_message(sender->user_id, target_user_id, 0, content);
+            
+            if (network_->send_message(target_user->socket_fd, private_msg)) {
+                network_->send_message(client_fd, "私聊消息已发送给 " + target_user->username);
+                logger_.debug("私聊消息: " + sender->username + " -> " + target_user->username + ": " + content);
+            } else {
+                network_->send_message(client_fd, "错误: 消息发送失败");
+            }
+            
+        } catch (const std::exception& e) {
+            network_->send_message(client_fd, "错误: 无效的用户ID");
+        }
+        
+    } else if (command == "BROADCAST") {
+        UserInfo* sender = user_manager_->find_user_by_fd(client_fd);
+        if (!sender) {
+            network_->send_message(client_fd, "错误: 请先登录");
+            return;
+        }
+        
+        if (tokens.size() < 2) {
+            network_->send_message(client_fd, "错误: 缺少消息内容");
+            return;
+        }
+        
+        std::string content = tokens[1];
+        std::string broadcast_msg = "广播来自 " + sender->username + " (ID:" + std::to_string(sender->user_id) + "): " + content;
+        
+        // 保存到数据库
+        message_repository_->save_message(sender->user_id, -1, 1, content);
+        
+        // 广播给所有在线用户
+        auto online_users = user_manager_->get_online_users();
+        bool success = true;
+        int send_count = 0;
+        
+        for (const auto& user : online_users) {
+            if (network_->send_message(user.socket_fd, broadcast_msg)) {
+                send_count++;
+            } else {
+                success = false;
+            }
+        }
+        
+        if (success) {
+            network_->send_message(client_fd, "广播消息已发送给 " + std::to_string(send_count) + " 个用户");
+        } else {
+            network_->send_message(client_fd, "警告: 部分用户消息发送失败，成功发送 " + std::to_string(send_count) + " 个用户");
+        }
+        
+        logger_.debug("广播消息: " + sender->username + ": " + content + " [接收者: " + std::to_string(send_count) + "]");
         
     } else if (command == "LIST") {
         auto online_users = user_manager_->get_online_users();
@@ -480,23 +676,73 @@ void ChatServer::handle_client_message(int client_fd, const std::string& message
     } else if (command == "STATS") {
         int online_count = user_manager_->get_user_count();
         int connection_count = connection_manager_->get_connection_count();
-        int message_count = db_.get_total_messages_count();
+        int message_count = message_repository_->get_message_count();
         int thread_count = thread_pool_->get_thread_count();
         int task_count = thread_pool_->get_task_count();
-        int total_users = db_.get_total_users_count();
-        std::string db_size = db_.get_database_size();
+        int total_users = user_repository_->get_total_users_count();
         
         std::string stats = "=== 服务器统计 ===\n"
                            "在线用户: " + std::to_string(online_count) + "\n" +
                            "总连接数: " + std::to_string(connection_count) + "\n" +
                            "注册用户: " + std::to_string(total_users) + "\n" +
                            "总消息数: " + std::to_string(message_count) + "\n" +
-                           "数据库大小: " + db_size + "\n" +
                            "工作线程: " + std::to_string(thread_count) + "\n" +
                            "待处理任务: " + std::to_string(task_count) + "\n" +
                            "=================";
         
         network_->send_message(client_fd, stats);
+        
+    } else if (command == "HISTORY") {
+        size_t count = 10;
+        if (tokens.size() > 1) {
+            try {
+                count = std::stoi(tokens[1]);
+                if (count > 50) count = 50; // 限制最大数量
+            } catch (...) {
+                // 使用默认值
+            }
+        }
+        
+        auto recent_messages = message_repository_->get_recent_messages(count);
+        
+        if (recent_messages.empty()) {
+            network_->send_message(client_fd, "暂无消息历史");
+            return;
+        }
+        
+        network_->send_message(client_fd, "=== 最近 " + std::to_string(recent_messages.size()) + " 条消息 ===");
+        for (const auto& msg : recent_messages) {
+            std::string target_info = (msg.to_user_id == -1) ? "[广播]" : "[私聊]";
+            std::string display_msg = "[" + msg.created_at + "] " + target_info + " " + msg.from_username + ": " + msg.content;
+            network_->send_message(client_fd, display_msg);
+        }
+        network_->send_message(client_fd, "========================");
+        
+    } else if (command == "QUIT") {
+        UserInfo* user = user_manager_->find_user_by_fd(client_fd);
+        if (user) {
+            std::string username = user->username;
+            user_manager_->remove_user_by_fd(client_fd);
+            
+            // 从数据库删除会话和更新状态
+            session_repository_->delete_session(client_fd);
+            user_repository_->set_user_online_status(user->user_id, false);
+            
+            logger_.info("用户退出: " + username + " (ID: " + std::to_string(user->user_id) + ")");
+            
+            // 广播用户下线消息
+            auto online_users = user_manager_->get_online_users();
+            std::string broadcast_msg = "系统: 用户 " + username + " 离开了聊天室";
+            message_repository_->save_message(-1, -1, 2, broadcast_msg);
+            
+            for (const auto& u : online_users) {
+                network_->send_message(u.socket_fd, broadcast_msg);
+            }
+        }
+        
+        network_->send_message(client_fd, "已断开服务器...");
+        network_->close_connection(client_fd);
+        connection_manager_->remove_connection(client_fd);
         
     } else {
         // 其他命令处理...

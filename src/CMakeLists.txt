@@ -11,13 +11,28 @@ set(CORE_SOURCES
     core/server.cpp
 )
 
+set(CONFIG_SOURCES
+    config/config_manager.cpp
+    config/ServerConfig.cpp
+)
+
 set(DATABASE_SOURCES
-    database/database_manager.cpp
+    # database/database_manager.cpp
+    database/AdminRepository.cpp
+    database/MessageRepository.cpp
+    database/SessionRepository.cpp
+    database/SQLiteDatabase.cpp
+    database/UserRepository.cpp
 )
 
 set(MANAGER_SOURCES
     managers/user_manager.cpp
     managers/message_history.cpp
+)
+
+set(MONITOR_SOURCES
+    monitor/server_monitor_impl.cpp
+    monitor/CPUMonitor.cpp
 )
 
 set(NETWORK_SOURCES
@@ -30,25 +45,28 @@ set(THREAD_SOURCES
 )
 
 set(UTILS_SOURCES
-    utils/config_manager.cpp
+    # utils/config_manager.cpp
     utils/logger.cpp
 )
 
 set(WEB_SOURCES
+    web/modern_json_parser.cpp
     web/web_server.cpp
-    web/web_api.cpp
+    # web/web_api.cpp
 )
 
 # 创建可执行文件
 add_executable(chat_server
     main.cpp
     ${CORE_SOURCES}
+    ${CONFIG_SOURCES}
     ${DATABASE_SOURCES}
     ${MANAGER_SOURCES}
     ${NETWORK_SOURCES}
     ${THREAD_SOURCES}
     ${UTILS_SOURCES}
     ${WEB_SOURCES}
+    ${MONITOR_SOURCES}
 )
 
 # 设置目标属性

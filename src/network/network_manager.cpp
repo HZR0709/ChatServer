@@ -72,8 +72,7 @@ int NetworkManager::accept_connection() {
         return -1;
     }
     
-    std::cout << "新客户端连接: " << inet_ntoa(client_addr.sin_addr) 
-              << ":" << ntohs(client_addr.sin_port) << std::endl;
+    // std::cout << "新客户端连接: " << inet_ntoa(client_addr.sin_addr) << ":" << ntohs(client_addr.sin_port) << std::endl;
     return client_fd;
 }
 

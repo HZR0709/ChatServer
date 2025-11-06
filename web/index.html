@@ -31,6 +31,16 @@
             border-radius: 10px;
             margin-bottom: 20px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .user-info {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .stats-grid {
@@ -46,6 +56,11 @@
             border-radius: 10px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
         }
         
         .stat-number {
@@ -72,6 +87,9 @@
             color: #333;
             border-bottom: 2px solid #667eea;
             padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         table {
@@ -111,18 +129,48 @@
             background-color: #f3e5f5;
         }
         
-        .refresh-btn {
+        .message-system {
+            background-color: #fff3cd;
+        }
+        
+        .btn {
             background: #667eea;
             color: white;
             border: none;
             padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
-            margin-bottom: 15px;
+            margin: 5px;
+            transition: background 0.2s;
         }
         
-        .refresh-btn:hover {
+        .btn:hover {
             background: #5a6fd8;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+        }
+        
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-warning:hover {
+            background: #e0a800;
         }
         
         .status-indicator {
@@ -154,241 +202,1010 @@
             border-radius: 5px;
             margin: 10px 0;
         }
+        
+        .success {
+            color: #155724;
+            padding: 10px;
+            background-color: #d4edda;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group label {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input {
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .login-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        
+        .login-btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .login-links {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .login-links a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        .login-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            min-width: 400px;
+            max-width: 90%;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .tab-container {
+            margin-bottom: 20px;
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .tab.active {
+            border-bottom-color: #667eea;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .server-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .status-running {
+            background-color: #28a745;
+        }
+        
+        .status-stopped {
+            background-color: #dc3545;
+        }
+        
+        .real-time-update {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 10px 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>聊天服务器管理面板</h1>
-            <p>实时监控和管理聊天服务器</p>
-        </header>
-        
-        <div class="stats-grid" id="statsGrid">
-            <div class="loading">加载中...</div>
-        </div>
-        
-        <div class="section">
-            <h2>用户管理</h2>
-            <button class="refresh-btn" onclick="loadUsers()">刷新用户列表</button>
-            <div id="usersTable">
-                <div class="loading">加载用户数据...</div>
+    <!-- 登录页面 -->
+    <div id="loginPage" class="login-container" style="display: none;">
+        <h2 style="text-align: center; margin-bottom: 30px;">服务器管理登录</h2>
+        <div class="login-form">
+            <div class="form-group">
+                <label for="username">用户名</label>
+                <input type="text" id="username" placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+                <label for="password">密码</label>
+                <input type="password" id="password" placeholder="请输入密码">
+            </div>
+            <button class="login-btn" onclick="login()">登录</button>
+            <div class="login-links">
+                <a href="#" onclick="showRegister()">注册新管理员账户</a>
             </div>
         </div>
-        
-        <div class="section">
-            <h2>最近消息</h2>
-            <button class="refresh-btn" onclick="loadMessages()">刷新消息</button>
-            <div id="messagesTable">
-                <div class="loading">加载消息数据...</div>
+    </div>
+
+    <!-- 注册模态框 -->
+    <div id="registerModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>注册管理员账户</h3>
+                <button class="close-btn" onclick="closeRegister()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="regUsername">用户名</label>
+                <input type="text" id="regUsername" placeholder="请输入用户名">
+            </div>
+            <div class="form-group">
+                <label for="regPassword">密码</label>
+                <input type="password" id="regPassword" placeholder="请输入密码">
+            </div>
+            <div class="form-group">
+                <label for="regConfirmPassword">确认密码</label>
+                <input type="password" id="regConfirmPassword" placeholder="请再次输入密码">
+            </div>
+            <div class="form-group">
+                <label for="regEmail">邮箱（可选）</label>
+                <input type="email" id="regEmail" placeholder="请输入邮箱">
+            </div>
+            <button class="btn btn-success" style="width: 100%;" onclick="register()">注册</button>
+        </div>
+    </div>
+
+    <!-- 管理面板 -->
+    <div id="adminPanel" style="display: none;">
+        <div class="container">
+            <header>
+                <h1>聊天服务器管理面板</h1>
+                <p>实时监控和管理聊天服务器</p>
+                <div class="user-info">
+                    <span>欢迎, <strong id="currentUser">管理员</strong></span>
+                    <button class="btn btn-warning" onclick="logout()">退出登录</button>
+                </div>
+            </header>
+            
+            <!-- 实时通知区域 -->
+            <div id="notificationArea"></div>
+            
+            <div class="stats-grid" id="statsGrid">
+                <div class="loading">加载中...</div>
+            </div>
+            
+            <!-- 服务器控制 -->
+            <div class="section">
+                <h2>
+                    服务器控制
+                    <div class="server-status">
+                        <span class="status-dot status-running" id="serverStatusDot"></span>
+                        <span id="serverStatusText">运行中</span>
+                    </div>
+                </h2>
+                <div class="action-buttons">
+                    <button class="btn btn-success" onclick="restartServer()">重启服务器</button>
+                    <button class="btn btn-warning" onclick="reloadConfig()">重载配置</button>
+                    <button class="btn btn-danger" onclick="shutdownServer()">关闭服务器</button>
+                    <button class="btn" onclick="backupDatabase()">备份数据库</button>
+                    <button class="btn" onclick="clearLogs()">清理日志</button>
+                </div>
+            </div>
+            
+            <!-- 用户管理 -->
+            <div class="section">
+                <h2>用户管理</h2>
+                <div class="action-buttons">
+                    <button class="btn" onclick="loadUsers()">刷新用户列表</button>
+                    <button class="btn btn-success" onclick="showAddUser()">添加用户</button>
+                    <button class="btn btn-warning" onclick="kickAllUsers()">踢出所有用户</button>
+                    <button class="btn btn-danger" onclick="banUser()">封禁用户</button>
+                </div>
+                <div id="usersTable">
+                    <div class="loading">加载用户数据...</div>
+                </div>
+            </div>
+            
+            <!-- 消息管理 -->
+            <div class="section">
+                <h2>消息管理</h2>
+                <div class="action-buttons">
+                    <button class="btn" onclick="loadMessages()">刷新消息</button>
+                    <button class="btn btn-warning" onclick="clearOldMessages()">清理旧消息</button>
+                    <button class="btn" onclick="exportMessages()">导出消息</button>
+                    <button class="btn btn-success" onclick="showBroadcast()">发送广播</button>
+                </div>
+                <div id="messagesTable">
+                    <div class="loading">加载消息数据...</div>
+                </div>
+            </div>
+            
+            <!-- 系统监控 -->
+            <div class="section">
+                <h2>系统监控</h2>
+                <div class="tab-container">
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab('systemInfo')">系统信息</div>
+                        <div class="tab" onclick="switchTab('performance')">性能监控</div>
+                        <div class="tab" onclick="switchTab('logs')">系统日志</div>
+                    </div>
+                    
+                    <div id="systemInfo" class="tab-content active">
+                        <div class="loading">加载系统信息...</div>
+                    </div>
+                    
+                    <div id="performance" class="tab-content">
+                        <div class="loading">加载性能数据...</div>
+                    </div>
+                    
+                    <div id="logs" class="tab-content">
+                        <div class="action-buttons">
+                            <button class="btn" onclick="loadLogs()">刷新日志</button>
+                            <button class="btn btn-warning" onclick="clearLogs()">清理日志</button>
+                            <button class="btn" onclick="downloadLogs()">下载日志</button>
+                        </div>
+                        <div id="logsContent">
+                            <div class="loading">加载日志数据...</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <div class="section">
-            <h2>系统信息</h2>
-            <button class="refresh-btn" onclick="loadSystemInfo()">刷新系统信息</button>
-            <div id="systemInfo">
-                <div class="loading">加载系统信息...</div>
+    </div>
+
+    <!-- 广播消息模态框 -->
+    <div id="broadcastModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>发送广播消息</h3>
+                <button class="close-btn" onclick="closeBroadcast()">&times;</button>
             </div>
+            <div class="form-group">
+                <label for="broadcastMessage">广播内容</label>
+                <textarea id="broadcastMessage" placeholder="请输入要广播的消息内容" rows="4" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px;"></textarea>
+            </div>
+            <button class="btn btn-success" style="width: 100%;" onclick="sendBroadcast()">发送广播</button>
         </div>
     </div>
 
     <script>
         // API基础URL
         const API_BASE = '/api';
-        
-        // 加载统计数据
-        async function loadStats() {
+        let currentUser = null;
+        let autoRefreshInterval = null;
+
+        // 认证相关函数
+        async function checkAuth() {
+            const token = localStorage.getItem('admin_token');
+            const user = localStorage.getItem('current_user');
+            
+            console.log('Token:', token);
+            console.log('User:', user);
+            
+            if (token && user) {
+                try {
+                    currentUser = JSON.parse(user);
+                    console.log('Parsed user:', currentUser);
+                    showAdminPanel();
+                    startAutoRefresh();
+                } catch (e) {
+                    console.error('JSON parse error:', e);
+                    console.error('Raw user data:', user);
+                    // 清除损坏的数据
+                    localStorage.removeItem('admin_token');
+                    localStorage.removeItem('current_user');
+                    showLoginPage();
+                }
+            } else {
+                showLoginPage();
+            }
+        }
+
+        function showLoginPage() {
+            document.getElementById('loginPage').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'none';
+        }
+
+        function showAdminPanel() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            document.getElementById('currentUser').textContent = currentUser.username;
+            
+            // 初始化数据
+            loadStats();
+            loadUsers();
+            loadMessages();
+            loadSystemInfo();
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                alert('请输入用户名和密码');
+                return;
+            }
+
             try {
-                const response = await fetch(`${API_BASE}/stats`);
+                const response = await fetch(`${API_BASE}/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
                 const data = await response.json();
-                
+                console.log('登录响应数据:', data);
+
                 if (data.success) {
-                    const stats = data.data;
-                    document.getElementById('statsGrid').innerHTML = `
-                        <div class="stat-card">
-                            <div class="stat-number">${stats.total_users}</div>
-                            <div class="stat-label">总用户数</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${stats.online_users}</div>
-                            <div class="stat-label">在线用户</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${stats.total_messages}</div>
-                            <div class="stat-label">总消息数</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">${stats.database_size}</div>
-                            <div class="stat-label">数据库大小</div>
-                        </div>
-                    `;
+                    // 🔥 根据实际响应结构调整
+                    // 响应结构: {success, message, data: {id, username, email, token}}
+                    const responseData = data.data;
+                    
+                    if (!responseData || !responseData.token) {
+                        throw new Error('响应数据格式不正确: 缺少token');
+                    }
+                    
+                    const token = responseData.token;
+                    
+                    // 构建用户对象
+                    const user = {
+                        id: responseData.id,
+                        username: responseData.username,
+                        email: responseData.email
+                    };
+                    
+                    console.log('Token:', token);
+                    console.log('User:', user);
+                    
+                    // 验证用户对象
+                    if (!user.username) {
+                        throw new Error('用户数据不完整: 缺少username');
+                    }
+                    
+                    localStorage.setItem('admin_token', token);
+                    localStorage.setItem('current_user', JSON.stringify(user));
+                    currentUser = user;
+                    
+                    showAdminPanel();
+                    showNotification('登录成功！', 'success');
                 } else {
-                    showError('statsGrid', '加载统计数据失败: ' + data.message);
+                    alert('登录失败: ' + (data.message || '未知错误'));
                 }
             } catch (error) {
-                showError('statsGrid', '加载统计数据失败: ' + error.message);
+                console.error('登录错误:', error);
+                alert('登录失败: ' + error.message);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('current_user');
+            currentUser = null;
+            stopAutoRefresh();
+            showLoginPage();
+        }
+
+        function showRegister() {
+            document.getElementById('registerModal').style.display = 'block';
+        }
+
+        function closeRegister() {
+            document.getElementById('registerModal').style.display = 'none';
+        }
+
+        async function register() {
+            const username = document.getElementById('regUsername').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const email = document.getElementById('regEmail').value;
+
+            if (!username || !password) {
+                alert('请输入用户名和密码');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                alert('两次输入的密码不一致');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/admin/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password, email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('注册成功！请登录');
+                    closeRegister();
+                    // 清空表单
+                    document.getElementById('regUsername').value = '';
+                    document.getElementById('regPassword').value = '';
+                    document.getElementById('regConfirmPassword').value = '';
+                    document.getElementById('regEmail').value = '';
+                } else {
+                    alert('注册失败: ' + data.message);
+                }
+            } catch (error) {
+                alert('注册失败: ' + error.message);
+            }
+        }
+
+        // 自动刷新
+        function startAutoRefresh() {
+            autoRefreshInterval = setInterval(() => {
+                loadStats();
+                // 每5分钟刷新用户和消息列表
+                if (Math.floor(Date.now() / 1000) % 300 === 0) {
+                    loadUsers();
+                    loadMessages();
+                }
+            }, 10000); // 每10秒刷新统计
+        }
+
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
+        // 通知系统
+        function showNotification(message, type = 'info') {
+            const notificationArea = document.getElementById('notificationArea');
+            const notification = document.createElement('div');
+            notification.className = `real-time-update ${type === 'success' ? 'success' : type === 'error' ? 'error' : ''}`;
+            notification.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            
+            notificationArea.appendChild(notification);
+            
+            // 自动移除旧通知
+            const notifications = notificationArea.getElementsByClassName('real-time-update');
+            if (notifications.length > 5) {
+                notifications[0].remove();
+            }
+            
+            // 自动消失
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 10000);
+        }
+
+        // Tab切换
+        function switchTab(tabName) {
+            // 隐藏所有tab内容
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => tab.classList.remove('active'));
+            
+            // 移除所有tab的active类
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            // 显示选中的tab内容
+            document.getElementById(tabName).classList.add('active');
+            
+            // 设置选中的tab
+            event.target.classList.add('active');
+            
+            // 加载对应tab的数据
+            if (tabName === 'performance') {
+                loadPerformance();
+            } else if (tabName === 'logs') {
+                loadLogs();
+            }
+        }
+
+        // API调用函数（需要认证）
+        async function apiCall(endpoint, options = {}) {
+            const token = localStorage.getItem('admin_token');
+            
+            const defaultOptions = {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            };
+            
+            const finalOptions = { ...defaultOptions, ...options };
+            
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, finalOptions);
+                
+                if (response.status === 401) {
+                    // 未授权，跳转到登录
+                    logout();
+                    return null;
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('API调用失败:', error);
+                showNotification(`API调用失败: ${error.message}`, 'error');
+                return null;
+            }
+        }
+
+        // 加载统计数据
+        async function loadStats() {
+            const data = await apiCall('/stats');
+            if (!data) return;
+            
+            if (data.success) {
+                const stats = data.data;
+                document.getElementById('statsGrid').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.total_users}</div>
+                        <div class="stat-label">总用户数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.online_users}</div>
+                        <div class="stat-label">在线用户</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.total_messages}</div>
+                        <div class="stat-label">总消息数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.database_size}</div>
+                        <div class="stat-label">数据库大小</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.thread_count || 0}</div>
+                        <div class="stat-label">工作线程</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.uptime || 'N/A'}</div>
+                        <div class="stat-label">运行时间</div>
+                    </div>
+                `;
+                
+                // 更新服务器状态
+                document.getElementById('serverStatusText').textContent = stats.server_status || '运行中';
+            } else {
+                showError('statsGrid', '加载统计数据失败: ' + data.message);
             }
         }
         
         // 加载用户列表
         async function loadUsers() {
-            try {
-                const response = await fetch(`${API_BASE}/users`);
-                const data = await response.json();
+            const data = await apiCall('/users');
+            if (!data) return;
+            
+            if (data.success) {
+                const users = data.data;
+                let html = '';
                 
-                if (data.success) {
-                    const users = data.data;
-                    let html = '';
-                    
-                    if (users.length > 0) {
-                        html = `
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>ID</th>
-                                        <th>用户名</th>
-                                        <th>状态</th>
-                                        <th>注册时间</th>
-                                        <th>最后登录</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                        `;
-                        
-                        users.forEach(user => {
-                            html += `
+                if (users.length > 0) {
+                    html = `
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td>${user.id}</td>
-                                    <td>${escapeHtml(user.username)}</td>
-                                    <td>
-                                        <span class="status-indicator ${user.is_online ? 'status-online' : 'status-offline'}"></span>
-                                        ${user.is_online ? '在线' : '离线'}
-                                    </td>
-                                    <td>${escapeHtml(user.created_at)}</td>
-                                    <td>${escapeHtml(user.last_login || '从未登录')}</td>
+                                    <th>ID</th>
+                                    <th>用户名</th>
+                                    <th>状态</th>
+                                    <th>注册时间</th>
+                                    <th>最后登录</th>
+                                    <th>操作</th>
                                 </tr>
-                            `;
-                        });
-                        
-                        html += '</tbody></table>';
-                    } else {
-                        html = '<p>暂无用户数据</p>';
-                    }
+                            </thead>
+                            <tbody>
+                    `;
                     
-                    document.getElementById('usersTable').innerHTML = html;
+                    users.forEach(user => {
+                        html += `
+                            <tr>
+                                <td>${user.id}</td>
+                                <td>${escapeHtml(user.username)}</td>
+                                <td>
+                                    <span class="status-indicator ${user.is_online ? 'status-online' : 'status-offline'}"></span>
+                                    ${user.is_online ? '在线' : '离线'}
+                                </td>
+                                <td>${escapeHtml(user.created_at)}</td>
+                                <td>${escapeHtml(user.last_login || '从未登录')}</td>
+                                <td>
+                                    <button class="btn btn-warning btn-sm" onclick="kickUser(${user.id})">踢出</button>
+                                    <button class="btn btn-danger btn-sm" onclick="banUser(${user.id})">封禁</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
                 } else {
-                    showError('usersTable', '加载用户数据失败: ' + data.message);
+                    html = '<p>暂无用户数据</p>';
                 }
-            } catch (error) {
-                showError('usersTable', '加载用户数据失败: ' + error.message);
+                
+                document.getElementById('usersTable').innerHTML = html;
+            } else {
+                showError('usersTable', '加载用户数据失败: ' + data.message);
             }
         }
         
         // 加载消息列表
         async function loadMessages() {
-            try {
-                const response = await fetch(`${API_BASE}/messages?limit=20`);
-                const data = await response.json();
+            const data = await apiCall('/messages?limit=20');
+            if (!data) return;
+            
+            if (data.success) {
+                const messages = data.data;
+                let html = '';
                 
-                if (data.success) {
-                    const messages = data.data;
-                    let html = '';
-                    
-                    if (messages.length > 0) {
-                        html = `
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>时间</th>
-                                        <th>发送者</th>
-                                        <th>接收者</th>
-                                        <th>内容</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                        `;
-                        
-                        messages.forEach(msg => {
-                            const messageClass = msg.to_user_id === null ? 'message-broadcast' : 'message-private';
-                            html += `
-                                <tr class="${messageClass}">
-                                    <td>${escapeHtml(msg.created_at)}</td>
-                                    <td>${escapeHtml(msg.from_username)}</td>
-                                    <td>${escapeHtml(msg.to_username || '所有人')}</td>
-                                    <td>${escapeHtml(msg.content)}</td>
+                if (messages.length > 0) {
+                    html = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>发送者</th>
+                                    <th>接收者</th>
+                                    <th>类型</th>
+                                    <th>内容</th>
                                 </tr>
-                            `;
-                        });
-                        
-                        html += '</tbody></table>';
-                    } else {
-                        html = '<p>暂无消息数据</p>';
-                    }
+                            </thead>
+                            <tbody>
+                    `;
                     
-                    document.getElementById('messagesTable').innerHTML = html;
+                    messages.forEach(msg => {
+                        const messageClass = msg.message_type === 1 ? 'message-broadcast' : 
+                                           msg.message_type === 2 ? 'message-system' : 'message-private';
+                        const typeText = msg.message_type === 1 ? '广播' : 
+                                        msg.message_type === 2 ? '系统' : '私聊';
+                        
+                        html += `
+                            <tr class="${messageClass}">
+                                <td>${escapeHtml(msg.created_at)}</td>
+                                <td>${escapeHtml(msg.from_username)}</td>
+                                <td>${escapeHtml(msg.to_username || '所有人')}</td>
+                                <td>${typeText}</td>
+                                <td>${escapeHtml(msg.content)}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
                 } else {
-                    showError('messagesTable', '加载消息数据失败: ' + data.message);
+                    html = '<p>暂无消息数据</p>';
                 }
-            } catch (error) {
-                showError('messagesTable', '加载消息数据失败: ' + error.message);
+                
+                document.getElementById('messagesTable').innerHTML = html;
+            } else {
+                showError('messagesTable', '加载消息数据失败: ' + data.message);
             }
         }
         
         // 加载系统信息
         async function loadSystemInfo() {
-            try {
-                const response = await fetch(`${API_BASE}/system`);
-                const data = await response.json();
-                
-                if (data.success) {
-                    const systemInfo = data.data;
-                    document.getElementById('systemInfo').innerHTML = `
-                        <table>
-                            <tr>
-                                <td><strong>服务器时间</strong></td>
-                                <td>${escapeHtml(systemInfo.server_time)}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>服务器版本</strong></td>
-                                <td>${escapeHtml(systemInfo.version)}</td>
-                            </tr>
-                            <tr>
-                                <td><strong>服务器状态</strong></td>
-                                <td><span class="online">${escapeHtml(systemInfo.status)}</span></td>
-                            </tr>
-                        </table>
-                    `;
-                } else {
-                    showError('systemInfo', '加载系统信息失败: ' + data.message);
-                }
-            } catch (error) {
-                showError('systemInfo', '加载系统信息失败: ' + error.message);
+            const data = await apiCall('/system');
+            if (!data) return;
+            
+            if (data.success) {
+                const systemInfo = data.data;
+                document.getElementById('systemInfo').innerHTML = `
+                    <table>
+                        <tr>
+                            <td><strong>服务器时间</strong></td>
+                            <td>${escapeHtml(systemInfo.server_time)}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>服务器版本</strong></td>
+                            <td>${escapeHtml(systemInfo.version)}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>服务器状态</strong></td>
+                            <td><span class="online">${escapeHtml(systemInfo.status)}</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>启动时间</strong></td>
+                            <td>${escapeHtml(systemInfo.start_time || 'N/A')}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>内存使用</strong></td>
+                            <td>${escapeHtml(systemInfo.memory_usage || 'N/A')}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>CPU使用率</strong></td>
+                            <td>${escapeHtml(systemInfo.cpu_usage || 'N/A')}</td>
+                        </tr>
+                    </table>
+                `;
+            } else {
+                showError('systemInfo', '加载系统信息失败: ' + data.message);
             }
         }
-        
-        // 显示错误信息
+
+        // 性能监控
+        async function loadPerformance() {
+            const data = await apiCall('/performance');
+            if (!data) return;
+            
+            if (data.success) {
+                const perf = data.data;
+                document.getElementById('performance').innerHTML = `
+                    <h3>系统性能</h3>
+                    <table>
+                        <tr>
+                            <td><strong>CPU使用率</strong></td>
+                            <td>${perf.cpu_usage || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>内存使用</strong></td>
+                            <td>${perf.memory_usage || 'N/A'}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>活动连接数</strong></td>
+                            <td>${perf.active_connections || 0}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>线程数</strong></td>
+                            <td>${perf.thread_count || 0}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>队列任务数</strong></td>
+                            <td>${perf.queued_tasks || 0}</td>
+                        </tr>
+                    </table>
+                `;
+            } else {
+                showError('performance', '加载性能数据失败: ' + data.message);
+            }
+        }
+
+        // 加载日志
+        async function loadLogs() {
+            const data = await apiCall('/logs');
+            if (!data) return;
+            
+            if (data.success) {
+                const logs = data.data;
+                let html = '<div style="max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 12px;">';
+                
+                if (logs.length > 0) {
+                    logs.forEach(log => {
+                        html += `<div>${escapeHtml(log)}</div>`;
+                    });
+                } else {
+                    html += '<p>暂无日志数据</p>';
+                }
+                
+                html += '</div>';
+                document.getElementById('logsContent').innerHTML = html;
+            } else {
+                showError('logsContent', '加载日志失败: ' + data.message);
+            }
+        }
+
+        // 服务器控制功能
+        async function restartServer() {
+            if (confirm('确定要重启服务器吗？这将中断所有连接。')) {
+                const data = await apiCall('/server/restart', { method: 'POST' });
+                if (data && data.success) {
+                    showNotification('服务器重启命令已发送', 'success');
+                }
+            }
+        }
+
+        async function shutdownServer() {
+            if (confirm('确定要关闭服务器吗？这将中断所有连接并停止服务。')) {
+                const data = await apiCall('/server/shutdown', { method: 'POST' });
+                if (data && data.success) {
+                    showNotification('服务器关闭命令已发送', 'success');
+                setTimeout(() => {
+                    alert('服务器已关闭，页面将自动刷新');
+                    location.reload();
+                }, 3000);
+                }
+            }
+        }
+
+        async function reloadConfig() {
+            const data = await apiCall('/server/reload-config', { method: 'POST' });
+            if (data && data.success) {
+                showNotification('配置重载成功', 'success');
+            }
+        }
+
+        async function backupDatabase() {
+            const data = await apiCall('/database/backup', { method: 'POST' });
+            if (data && data.success) {
+                showNotification('数据库备份成功', 'success');
+            }
+        }
+
+        // 用户管理功能
+        function showAddUser() {
+            // 实现添加用户模态框
+            alert('添加用户功能开发中...');
+        }
+
+        async function kickUser(userId) {
+            if (confirm('确定要踢出这个用户吗？')) {
+                const data = await apiCall(`/users/${userId}/kick`, { method: 'POST' });
+                if (data && data.success) {
+                    showNotification('用户踢出成功', 'success');
+                    loadUsers();
+                }
+            }
+        }
+
+        async function kickAllUsers() {
+            if (confirm('确定要踢出所有在线用户吗？')) {
+                const data = await apiCall('/users/kick-all', { method: 'POST' });
+                if (data && data.success) {
+                    showNotification('所有用户踢出成功', 'success');
+                    loadUsers();
+                }
+            }
+        }
+
+        async function banUser(userId) {
+            if (confirm('确定要封禁这个用户吗？')) {
+                const data = await apiCall(`/users/${userId}/ban`, { method: 'POST' });
+                if (data && data.success) {
+                    showNotification('用户封禁成功', 'success');
+                    loadUsers();
+                }
+            }
+        }
+
+        // 消息管理功能
+        function showBroadcast() {
+            document.getElementById('broadcastModal').style.display = 'block';
+        }
+
+        function closeBroadcast() {
+            document.getElementById('broadcastModal').style.display = 'none';
+        }
+
+        async function sendBroadcast() {
+            const message = document.getElementById('broadcastMessage').value;
+            if (!message) {
+                alert('请输入广播内容');
+                return;
+            }
+
+            const data = await apiCall('/messages/broadcast', {
+                method: 'POST',
+                body: JSON.stringify({ message })
+            });
+
+            if (data && data.success) {
+                showNotification('广播发送成功', 'success');
+                closeBroadcast();
+                document.getElementById('broadcastMessage').value = '';
+                loadMessages();
+            }
+        }
+
+        async function clearOldMessages() {
+            if (confirm('确定要清理30天前的旧消息吗？')) {
+                const data = await apiCall('/messages/clear-old', { method: 'POST' });
+                if (data && data.success) {
+                    showNotification('旧消息清理成功', 'success');
+                    loadMessages();
+                }
+            }
+        }
+
+        async function exportMessages() {
+            const data = await apiCall('/messages/export');
+            if (data && data.success) {
+                // 创建下载链接
+                const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `messages_export_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showNotification('消息导出成功', 'success');
+            }
+        }
+
+        // 工具函数
         function showError(elementId, message) {
             document.getElementById(elementId).innerHTML = `
                 <div class="error">${escapeHtml(message)}</div>
             `;
         }
-        
-        // HTML转义
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
-        
+
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', function() {
-            loadStats();
-            loadUsers();
-            loadMessages();
-            loadSystemInfo();
-            
-            // 每30秒自动刷新统计数据
-            setInterval(loadStats, 30000);
+            checkAuth();
         });
     </script>
 </body>

@@ -16,6 +16,7 @@ endif()
 # 寻找依赖包
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 # 查找 SQLite3
 find_path(SQLite3_INCLUDE_DIR sqlite3.h)
@@ -29,9 +30,19 @@ else()
     message(FATAL_ERROR "SQLite3 not found. Please install sqlite3 development package.")
 endif()
 
+
 # 添加可执行文件
 add_subdirectory(src)
 
+target_include_directories(chat_server PRIVATE
+    include                    # 公共头文件
+)
+
+# 链接库
+target_link_libraries(chat_server PRIVATE 
+    OpenSSL::SSL 
+    OpenSSL::Crypto
+)
 # 安装目标
 install(TARGETS chat_server
     RUNTIME DESTINATION bin
