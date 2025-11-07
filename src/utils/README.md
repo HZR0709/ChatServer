@@ -319,7 +319,3 @@ kill -12 <pid>    # SIGUSR2
 ```
 
 
-
-## 许可证
-
-MIT License
